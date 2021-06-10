@@ -16,12 +16,14 @@ import org.openqa.selenium.TakesScreenshot
 import org.openqa.selenium.WebDriver
 import java.io.File
 import java.lang.System.currentTimeMillis
+import java.util.concurrent.TimeUnit
 
 val log = KotlinLogging.logger("ReportJob")
 
 class ReportJob {
 
     private var driver: WebDriver = createDriver()
+    private var startTime = System.currentTimeMillis()
 
     private val locations = Config.locationList()
     private val birthDate = Config.birthDate
@@ -65,6 +67,14 @@ class ReportJob {
             } catch (e: Exception) {
                 log.error(e) { "Failed to check location: $location\n" + e.message }
             }
+
+            if (System.currentTimeMillis() > startTime + (1000 * 60 * 60)) {
+                log.info { "Restarting session" }
+                driver.quit()
+                driver = createDriver()
+                startTime = System.currentTimeMillis()
+            }
+
             Thread.sleep(Config.waitingTime())
         }
     }
